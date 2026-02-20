@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>SAND — San Andreas Naval Defence</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;600&family=Barlow+Condensed:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy: #060c14;
+      --navy2: #0a1420;
+      --navy3: #0f1e2e;
+      --accent: #1a6fa8;
+      --accent2: #2496d8;
+      --gold: #c8a84b;
+      --text: #d0dce8;
+      --muted: #5a7a94;
+      --border: rgba(26,111,168,0.25);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--navy);
+      color: var(--text);
+      font-family: 'Barlow', sans-serif;
+      font-weight: 300;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    /* ─── NOISE TEXTURE ─── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.5;
+    }
+
+    /* ─── NAV ─── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 3rem;
+      height: 64px;
+      background: rgba(6,12,20,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.6rem;
+      letter-spacing: 4px;
+      color: #fff;
+    }
+
+    .nav-logo span { color: var(--accent2); }
+
+    nav ul {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.85rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+
+    nav a:hover { color: var(--accent2); }
+
+    /* ─── HERO ─── */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 6rem 2rem 4rem;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 40%, rgba(26,111,168,0.12) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 40% at 80% 80%, rgba(200,168,75,0.05) 0%, transparent 60%),
+        linear-gradient(180deg, #060c14 0%, #0a1420 100%);
+      z-index: -1;
+    }
+
+    /* Animated radar ring */
+    .radar {
+      position: absolute;
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      border: 1px solid rgba(26,111,168,0.15);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      animation: pulse 4s ease-in-out infinite;
+      z-index: -1;
+    }
+    .radar::before {
+      content: '';
+      position: absolute;
+      inset: 60px;
+      border-radius: 50%;
+      border: 1px solid rgba(26,111,168,0.1);
+      animation: pulse 4s ease-in-out infinite 0.5s;
+    }
+    .radar::after {
+      content: '';
+      position: absolute;
+      inset: 120px;
+      border-radius: 50%;
+      border: 1px solid rgba(26,111,168,0.08);
+      animation: pulse 4s ease-in-out infinite 1s;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
+      50% { opacity: 1; transform: translate(-50%, -50%) scale(1.03); }
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 0.35rem 1rem;
+      margin-bottom: 2rem;
+      animation: fadeUp 0.8s ease both;
+    }
+
+    .badge::before { content: '◆'; font-size: 0.5rem; }
+
+    h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(4rem, 10vw, 9rem);
+      letter-spacing: 10px;
+      line-height: 0.9;
+      color: #fff;
+      animation: fadeUp 0.8s ease 0.15s both;
+    }
+
+    h1 span { color: var(--accent2); }
+
+    .hero-sub {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.1rem;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 1.2rem;
+      animation: fadeUp 0.8s ease 0.3s both;
+    }
+
+    .hero-desc {
+      max-width: 560px;
+      margin: 2rem auto 0;
+      font-size: 1rem;
+      color: #8aafc8;
+      animation: fadeUp 0.8s ease 0.45s both;
+    }
+
+    .divider-line {
+      width: 60px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent2), transparent);
+      margin: 2.5rem auto;
+      animation: fadeUp 0.8s ease 0.6s both;
+    }
+
+    .scroll-hint {
+      position: absolute;
+      bottom: 2.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--muted);
+      font-size: 0.7rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      animation: fadeUp 1s ease 1s both;
+    }
+
+    .scroll-arrow {
+      width: 1px;
+      height: 40px;
+      background: linear-gradient(180deg, var(--accent2), transparent);
+      animation: scrollArrow 2s ease-in-out infinite;
+    }
+
+    @keyframes scrollArrow {
+      0%, 100% { opacity: 0.3; transform: scaleY(1); }
+      50% { opacity: 1; transform: scaleY(1.2); }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── SECTIONS ─── */
+    section {
+      position: relative;
+      z-index: 1;
+      padding: 6rem 2rem;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--accent2);
+      margin-bottom: 0.75rem;
+    }
+
+    h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      letter-spacing: 4px;
+      color: #fff;
+      margin-bottom: 1rem;
+    }
+
+    /* ─── ABOUT ─── */
+    #about {
+      background: var(--navy2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+    }
+
+    .about-text p {
+      color: #8aafc8;
+      margin-bottom: 1rem;
+      font-size: 1.05rem;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .stat-card {
+      padding: 1.5rem;
+      border: 1px solid var(--border);
+      background: rgba(26,111,168,0.05);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 3px;
+      height: 100%;
+      background: var(--accent2);
+    }
+
+    .stat-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.5rem;
+      color: var(--accent2);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 0.25rem;
+    }
+
+    /* ─── SERVICES ─── */
+    #services { background: var(--navy); }
+
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+
+    .service-card {
+      padding: 2rem;
+      border: 1px solid var(--border);
+      background: var(--navy3);
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+
+    .service-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.4s ease;
+    }
+
+    .service-card:hover { border-color: rgba(36,150,216,0.4); transform: translateY(-4px); }
+    .service-card:hover::after { transform: scaleX(1); }
+
+    .service-icon {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .service-card h3 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.1rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #fff;
+      margin-bottom: 0.75rem;
+    }
+
+    .service-card p {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    /* ─── TEAM ─── */
+    #team {
+      background: var(--navy2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+
+    .member-card {
+      padding: 2rem;
+      border: 1px solid var(--border);
+      background: var(--navy);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .member-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--gold));
+    }
+
+    .avatar {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--navy3));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem;
+      color: #fff;
+      margin: 0 auto 1.25rem;
+      border: 2px solid var(--border);
+    }
+
+    .member-name {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.2rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #fff;
+    }
+
+    .member-rank {
+      font-size: 0.8rem;
+      color: var(--gold);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-top: 0.25rem;
+    }
+
+    /* ─── JOIN ─── */
+    #join { background: var(--navy); }
+
+    .join-box {
+      max-width: 680px;
+      margin: 0 auto;
+      text-align: center;
+      padding: 4rem;
+      border: 1px solid var(--border);
+      background: var(--navy3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .join-box::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(26,111,168,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .join-box p {
+      color: #8aafc8;
+      margin: 1rem 0 2.5rem;
+      font-size: 1.05rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--accent);
+      color: #fff;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.9rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 1rem 2.5rem;
+      border: 1px solid var(--accent2);
+      transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
+      position: relative;
+      z-index: 1;
+    }
+
+    .btn:hover {
+      background: var(--accent2);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(36,150,216,0.3);
+    }
+
+    .btn::after { content: '→'; }
+
+    /* ─── FOOTER ─── */
+    footer {
+      background: #030810;
+      border-top: 1px solid var(--border);
+      padding: 2.5rem 2rem;
+      text-align: center;
+      z-index: 1;
+      position: relative;
+    }
+
+    .footer-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 6px;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+
+    footer p {
+      color: #2d4a60;
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+    }
+
+    /* ─── DIVISIONS ─── */
+    #divisions {
+      background: var(--navy3);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .divisions-intro {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .divisions-intro p {
+      color: var(--muted);
+      font-size: 1rem;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .division-slider {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .division-track {
+      display: flex;
+      transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .division-slide {
+      min-width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: 0;
+      min-height: 420px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .division-visual {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem;
+      overflow: hidden;
+    }
+
+    .division-slide:nth-child(1) .division-visual {
+      background: linear-gradient(135deg, rgba(80,50,20,0.7) 0%, rgba(6,12,20,0.95) 100%);
+    }
+    .division-slide:nth-child(2) .division-visual {
+      background: linear-gradient(135deg, rgba(10,40,70,0.7) 0%, rgba(6,12,20,0.95) 100%);
+    }
+    .division-slide:nth-child(3) .division-visual {
+      background: linear-gradient(135deg, rgba(70,15,15,0.7) 0%, rgba(6,12,20,0.95) 100%);
+    }
+
+    .division-visual::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 30px,
+        rgba(255,255,255,0.015) 30px,
+        rgba(255,255,255,0.015) 31px
+      );
+    }
+
+    .div-number {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 8rem;
+      line-height: 1;
+      opacity: 0.06;
+      position: absolute;
+      bottom: -1rem;
+      right: 1rem;
+      color: #fff;
+    }
+
+    .div-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      transition: opacity 0.4s, transform 0.6s;
+    }
+
+    .division-slide:hover .div-img {
+      transform: scale(1.04);
+    }
+
+    .div-tag {
+      position: absolute;
+      top: 1.5rem;
+      left: 1.5rem;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.65rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 0.3rem 0.8rem;
+      border: 1px solid;
+      z-index: 1;
+    }
+
+    .division-slide:nth-child(1) .div-tag { color: #c8854b; border-color: #c8854b; }
+    .division-slide:nth-child(2) .div-tag { color: var(--accent2); border-color: var(--accent2); }
+    .division-slide:nth-child(3) .div-tag { color: #c84b4b; border-color: #c84b4b; }
+
+    .division-content {
+      padding: 3rem 3rem 3rem 2.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: rgba(10,20,32,0.8);
+      border-left: 1px solid var(--border);
+    }
+
+    .division-content h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.2rem;
+      letter-spacing: 3px;
+      color: #fff;
+      margin-bottom: 0.25rem;
+      line-height: 1.1;
+    }
+
+    .division-subtitle {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.75rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .division-content p {
+      color: #8aafc8;
+      font-size: 0.98rem;
+      line-height: 1.8;
+      margin-bottom: 2rem;
+    }
+
+    .division-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .dtag {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 0.3rem 0.8rem;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      background: rgba(26,111,168,0.05);
+    }
+
+    /* Slider controls */
+    .slider-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-top: 2.5rem;
+    }
+
+    .slider-btn {
+      width: 44px; height: 44px;
+      border: 1px solid var(--border);
+      background: var(--navy2);
+      color: var(--muted);
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .slider-btn:hover {
+      border-color: var(--accent2);
+      color: var(--accent2);
+      background: rgba(36,150,216,0.08);
+    }
+
+    .slider-dots {
+      display: flex;
+      gap: 0.6rem;
+    }
+
+    .dot {
+      width: 24px; height: 2px;
+      background: var(--border);
+      cursor: pointer;
+      transition: background 0.3s, width 0.3s;
+    }
+
+    .dot.active {
+      background: var(--accent2);
+      width: 40px;
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 768px) {
+      nav { padding: 0 1.5rem; }
+      nav ul { gap: 1.2rem; }
+      .about-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+      .services-grid { grid-template-columns: 1fr; }
+      .join-box { padding: 2.5rem 1.5rem; }
+      .division-slide { grid-template-columns: 1fr; min-height: auto; }
+      .division-visual { min-height: 180px; padding: 2rem; }
+      .division-content { padding: 2rem 1.5rem; border-left: none; border-top: 1px solid var(--border); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">SAND<span>.</span></div>
+  <ul>
+    <li><a href="#about">O frakci</a></li>
+    <li><a href="#divisions">Divize</a></li>
+    <li><a href="#services">Operace</a></li>
+    <li><a href="#team">Tým</a></li>
+    <li><a href="#join">Vstoupit</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="radar"></div>
+
+  <div class="badge">Cayo Perico — Bezpečnostní Divize</div>
+  <h1>S<span>A</span>ND</h1>
+  <p class="hero-sub">San Andreas Naval Defence</p>
+  <p class="hero-desc">Ozbrojená bezpečnostní jednotka zajišťující kontrolu vstupu na Cayo Perico. Disciplína. Profesionalita. Ochrana za každou cenu.</p>
+  <div class="divider-line"></div>
+
+  <div class="scroll-hint">
+    Scroll
+    <div class="scroll-arrow"></div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="container">
+    <div class="about-grid">
+      <div class="about-text">
+        <p class="section-label">// Mise</p>
+        <h2>O Frakci</h2>
+        <p>SAND je ozbrojená bezpečnostní jednotka zajišťující kontrolu vstupu na Cayo Perico. Naším úkolem je prevence nelegálních aktivit, zabavování kontrabandu a udržování bezpečnosti ostrova.</p>
+        <p>Fungujeme na principu <strong>disciplíny</strong> a <strong>profesionality</strong>. Každý člen SAND je vyškolený operativec připravený reagovat na hrozby v reálném čase.</p>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-num">24/7</div>
+          <div class="stat-label">Aktivní střežení</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">100%</div>
+          <div class="stat-label">Pokrytí checkpointů</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">0</div>
+          <div class="stat-label">Tolerance kontrabandu</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">Elite</div>
+          <div class="stat-label">Úroveň výcviku</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section id="services">
+  <div class="container">
+    <p class="section-label">// Operace</p>
+    <h2>Co Děláme</h2>
+    <div class="services-grid">
+      <div class="service-card">
+        <span class="service-icon">🛂</span>
+        <h3>Kontrola vstupu</h3>
+        <p>Provozujeme kontrolní checkpoint na hranici ostrova. Každá osoba a vozidlo prochází důkladnou prověrkou před vpuštěním do chráněného území.</p>
+      </div>
+      <div class="service-card">
+        <span class="service-icon">🚁</span>
+        <h3>Pravidelné patroly</h3>
+        <p>Nepřetržité terénní i vzdušné patroly zajišťují pokrytí celého perimetru Cayo Perico. Detekujeme a neutralizujeme hrozby dříve, než eskalují.</p>
+      </div>
+      <div class="service-card">
+        <span class="service-icon">⚡</span>
+        <h3>Taktické zásahy</h3>
+        <p>Rychlá reakční síla pro mimořádné situace. Trénovaný tým reaguje na bezpečnostní hrozby s maximální efektivitou a minimálními vedlejšími škodami.</p>
+      </div>
+      <div class="service-card">
+        <span class="service-icon">📦</span>
+        <h3>Zabavení kontrabandu</h3>
+        <p>Systematická prohlídka osob a vozidel. Veškerý kontraband je okamžitě zabaven a zdokumentován dle protokolu divize SAND.</p>
+      </div>
+      <div class="service-card">
+        <span class="service-icon">🗺️</span>
+        <h3>Ochrana území</h3>
+        <p>Udržujeme bezpečnostní perimetr ostrova a kontrolujeme veškerý pohyb v chráněné zóně. Bezpečnost území je naší absolutní prioritou.</p>
+      </div>
+      <div class="service-card">
+        <span class="service-icon">📋</span>
+        <h3>Protokol a pořádek</h3>
+        <p>Každá operace je vedena dle přísných protokolů. Transparentní reporting a disciplinovaný přístup jsou základem naší práce.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DIVISIONS -->
+<section id="divisions">
+  <div class="container">
+    <div class="divisions-intro">
+      <p class="section-label">// Složení sil</p>
+      <h2>Divize SAND</h2>
+      <p>Naše síla spočívá v specializovaných jednotkách, každá s jedinečnou rolí v ochraně ostrova.</p>
+    </div>
+
+    <div class="division-slider">
+      <div class="division-track" id="divTrack">
+
+        <!-- 1. Infantry -->
+        <div class="division-slide">
+          <div class="division-visual">
+            <div class="div-tag">DIV-01</div>
+            <svg class="div-img" viewBox="0 0 400 320" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+              <!-- Background terrain -->
+              <rect width="400" height="320" fill="#0a1420"/>
+              <polygon points="0,220 60,160 120,190 180,140 240,170 300,120 360,155 400,130 400,320 0,320" fill="#0d1f10" opacity="0.9"/>
+              <polygon points="0,250 80,200 160,230 260,195 340,220 400,200 400,320 0,320" fill="#0a1a0c" opacity="0.7"/>
+              <!-- Grid overlay -->
+              <pattern id="grid1" width="30" height="30" patternUnits="userSpaceOnUse">
+                <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#1a6fa8" stroke-width="0.3" opacity="0.3"/>
+              </pattern>
+              <rect width="400" height="320" fill="url(#grid1)"/>
+              <!-- Soldier 1 (left) -->
+              <g transform="translate(90,60)">
+                <!-- Helmet -->
+                <ellipse cx="30" cy="18" rx="22" ry="14" fill="#2d3a1e"/>
+                <rect x="10" y="24" width="40" height="6" rx="2" fill="#1e2714"/>
+                <!-- Head -->
+                <ellipse cx="30" cy="30" rx="13" ry="14" fill="#8a6a4a"/>
+                <!-- Goggles -->
+                <rect x="17" y="25" width="12" height="7" rx="3" fill="#1a6fa8" opacity="0.8"/>
+                <rect x="31" y="25" width="12" height="7" rx="3" fill="#1a6fa8" opacity="0.8"/>
+                <line x1="29" y1="28" x2="31" y2="28" stroke="#0a1420" stroke-width="1.5"/>
+                <!-- Neck -->
+                <rect x="24" y="43" width="12" height="8" fill="#8a6a4a"/>
+                <!-- Body/vest -->
+                <rect x="8" y="50" width="44" height="55" rx="4" fill="#3a4a28"/>
+                <!-- Plate carrier detail -->
+                <rect x="14" y="55" width="32" height="38" rx="2" fill="#2d3a1e"/>
+                <rect x="17" y="58" width="26" height="6" rx="1" fill="#1e2714" opacity="0.6"/>
+                <rect x="17" y="67" width="26" height="6" rx="1" fill="#1e2714" opacity="0.6"/>
+                <rect x="17" y="76" width="26" height="6" rx="1" fill="#1e2714" opacity="0.6"/>
+                <!-- Left arm -->
+                <rect x="-4" y="52" width="14" height="40" rx="5" fill="#3a4a28"/>
+                <rect x="-6" y="88" width="16" height="14" rx="3" fill="#2d3a1e"/>
+                <!-- Right arm holding rifle -->
+                <rect x="50" y="52" width="14" height="40" rx="5" fill="#3a4a28"/>
+                <!-- Rifle -->
+                <rect x="58" y="40" width="5" height="70" rx="2" fill="#1a1a1a"/>
+                <rect x="55" y="60" width="12" height="6" rx="1" fill="#333"/>
+                <rect x="60" y="35" width="2" height="15" rx="1" fill="#111"/>
+                <rect x="56" y="100" width="8" height="5" rx="1" fill="#222"/>
+                <!-- Legs -->
+                <rect x="14" y="103" width="16" height="50" rx="4" fill="#2d3a28"/>
+                <rect x="32" y="103" width="16" height="50" rx="4" fill="#2d3a28"/>
+                <!-- Boots -->
+                <rect x="11" y="148" width="20" height="12" rx="3" fill="#1a1a14"/>
+                <rect x="29" y="148" width="20" height="12" rx="3" fill="#1a1a14"/>
+              </g>
+              <!-- Soldier 2 (right, slightly back) -->
+              <g transform="translate(220,90) scale(0.85)">
+                <ellipse cx="30" cy="18" rx="22" ry="14" fill="#2d3a1e"/>
+                <rect x="10" y="24" width="40" height="6" rx="2" fill="#1e2714"/>
+                <ellipse cx="30" cy="30" rx="13" ry="14" fill="#7a5a3a"/>
+                <rect x="17" y="25" width="12" height="7" rx="3" fill="#1a6fa8" opacity="0.8"/>
+                <rect x="31" y="25" width="12" height="7" rx="3" fill="#1a6fa8" opacity="0.8"/>
+                <rect x="24" y="43" width="12" height="8" fill="#7a5a3a"/>
+                <rect x="8" y="50" width="44" height="55" rx="4" fill="#3a4a28"/>
+                <rect x="14" y="55" width="32" height="38" rx="2" fill="#2d3a1e"/>
+                <rect x="-4" y="52" width="14" height="40" rx="5" fill="#3a4a28"/>
+                <rect x="50" y="52" width="14" height="40" rx="5" fill="#3a4a28"/>
+                <rect x="58" y="40" width="5" height="70" rx="2" fill="#1a1a1a"/>
+                <rect x="55" y="60" width="12" height="6" rx="1" fill="#333"/>
+                <rect x="14" y="103" width="16" height="50" rx="4" fill="#2d3a28"/>
+                <rect x="32" y="103" width="16" height="50" rx="4" fill="#2d3a28"/>
+                <rect x="11" y="148" width="20" height="12" rx="3" fill="#1a1a14"/>
+                <rect x="29" y="148" width="20" height="12" rx="3" fill="#1a1a14"/>
+              </g>
+              <!-- Scan line effect -->
+              <rect width="400" height="2" y="0" fill="#2496d8" opacity="0.15">
+                <animateTransform attributeName="transform" type="translate" from="0,0" to="0,320" dur="3s" repeatCount="indefinite"/>
+              </rect>
+              <!-- Corner brackets -->
+              <g stroke="#2496d8" stroke-width="1.5" fill="none" opacity="0.6">
+                <path d="M8,8 L8,24 M8,8 L24,8"/>
+                <path d="M392,8 L376,8 M392,8 L392,24"/>
+                <path d="M8,312 L8,296 M8,312 L24,312"/>
+                <path d="M392,312 L376,312 M392,312 L392,296"/>
+              </g>
+            </svg>
+            <div class="div-number">01</div>
+          </div>
+          <div class="division-content">
+            <h3>Infantry Division</h3>
+            <div class="division-subtitle">Pěchotní divize</div>
+            <p>Základní bojová síla armády. Pěchota se specializuje na pozemní operace, čištění budov, zajišťování oblastí a přímé střety s nepřítelem. Jsou páteří každé mise, umí se rychle přesouvat a adaptovat.</p>
+            <div class="division-tags">
+              <span class="dtag">Pozemní operace</span>
+              <span class="dtag">CQB</span>
+              <span class="dtag">Zajištění oblastí</span>
+              <span class="dtag">Rychlý přesun</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Air Force -->
+        <div class="division-slide">
+          <div class="division-visual">
+            <div class="div-tag">DIV-02</div>
+            <svg class="div-img" viewBox="0 0 400 320" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+              <rect width="400" height="320" fill="#060c14"/>
+              <!-- Night sky gradient -->
+              <defs>
+                <radialGradient id="skyGlow" cx="50%" cy="40%" r="60%">
+                  <stop offset="0%" stop-color="#0d2a4a" stop-opacity="1"/>
+                  <stop offset="100%" stop-color="#060c14" stop-opacity="1"/>
+                </radialGradient>
+              </defs>
+              <rect width="400" height="320" fill="url(#skyGlow)"/>
+              <!-- Stars -->
+              <g fill="#ffffff" opacity="0.6">
+                <circle cx="20" cy="30" r="1"/><circle cx="55" cy="15" r="1.2"/><circle cx="100" cy="40" r="0.8"/>
+                <circle cx="150" cy="20" r="1"/><circle cx="200" cy="10" r="1.3"/><circle cx="260" cy="35" r="0.9"/>
+                <circle cx="310" cy="18" r="1.1"/><circle cx="360" cy="28" r="0.8"/><circle cx="380" cy="50" r="1"/>
+                <circle cx="40" cy="70" r="0.7"/><circle cx="340" cy="65" r="1.2"/>
+              </g>
+              <!-- Mountains silhouette -->
+              <polygon points="0,240 50,180 100,210 160,160 220,200 280,155 340,185 400,165 400,320 0,320" fill="#0a1218" opacity="0.9"/>
+              <!-- Grid overlay -->
+              <pattern id="grid2" width="30" height="30" patternUnits="userSpaceOnUse">
+                <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#1a6fa8" stroke-width="0.3" opacity="0.25"/>
+              </pattern>
+              <rect width="400" height="320" fill="url(#grid2)"/>
+              <!-- MH-6 Little Bird Helicopter -->
+              <g transform="translate(70,80)">
+                <!-- Main rotor blades -->
+                <g transform="translate(130,45)" opacity="0.9">
+                  <ellipse cx="0" cy="0" rx="110" ry="5" fill="#1a2a3a" rx="3"/>
+                  <ellipse cx="0" cy="0" rx="5" ry="80" fill="#1a2a3a" ry="3"/>
+                </g>
+                <!-- Fuselage (egg-shaped MH-6 body) -->
+                <ellipse cx="130" cy="95" rx="72" ry="38" fill="#1e2a1a"/>
+                <ellipse cx="130" cy="95" rx="68" ry="34" fill="#243020"/>
+                <!-- Cockpit bubble (distinctive MH-6 feature) -->
+                <ellipse cx="110" cy="85" rx="45" ry="30" fill="#0a2540" opacity="0.9"/>
+                <ellipse cx="108" cy="83" rx="38" ry="24" fill="#0d3060" opacity="0.7"/>
+                <!-- Cockpit frame -->
+                <ellipse cx="110" cy="85" rx="45" ry="30" fill="none" stroke="#2496d8" stroke-width="1.5" opacity="0.6"/>
+                <!-- Pilot silhouette -->
+                <ellipse cx="100" cy="82" rx="12" ry="13" fill="#0a0f14" opacity="0.8"/>
+                <rect x="90" y="90" width="20" height="15" rx="3" fill="#0a0f14" opacity="0.8"/>
+                <!-- Helmet visor glint -->
+                <ellipse cx="96" cy="78" rx="5" ry="3" fill="#2496d8" opacity="0.4"/>
+                <!-- Tail boom -->
+                <polygon points="195,90 195,100 280,110 280,95" fill="#1e2a1a"/>
+                <rect x="275" y="88" width="8" height="24" rx="2" fill="#182218"/>
+                <!-- Tail rotor -->
+                <ellipse cx="283" cy="100" rx="4" ry="22" fill="#1a2a1a" opacity="0.8"/>
+                <!-- Landing skids -->
+                <rect x="70" y="128" width="120" height="5" rx="2" fill="#1a2a1a"/>
+                <rect x="75" y="110" width="5" height="22" rx="1" fill="#151e15"/>
+                <rect x="175" y="110" width="5" height="22" rx="1" fill="#151e15"/>
+                <!-- Side bench (soldiers sitting outside - MH-6 signature) -->
+                <rect x="60" y="98" width="22" height="8" rx="2" fill="#1a2814"/>
+                <rect x="188" y="98" width="22" height="8" rx="2" fill="#1a2814"/>
+                <!-- Soldier on left bench -->
+                <ellipse cx="68" cy="92" rx="8" ry="8" fill="#2d3a1e"/>
+                <rect x="60" y="99" width="16" height="14" rx="2" fill="#3a4a28"/>
+                <!-- Soldier on right bench -->
+                <ellipse cx="200" cy="92" rx="8" ry="8" fill="#2d3a1e"/>
+                <rect x="192" y="99" width="16" height="14" rx="2" fill="#3a4a28"/>
+                <!-- Rotor hub -->
+                <circle cx="130" cy="45" r="8" fill="#1a2a1a"/>
+                <circle cx="130" cy="45" r="4" fill="#2496d8" opacity="0.6"/>
+                <!-- Navigation lights -->
+                <circle cx="68" cy="98" r="3" fill="#ff4444" opacity="0.8"/>
+                <circle cx="192" cy="98" r="3" fill="#44ff44" opacity="0.8"/>
+                <!-- Searchlight beam -->
+                <polygon points="115,128 125,128 145,200 95,200" fill="#2496d8" opacity="0.06"/>
+                <ellipse cx="120" cy="128" rx="8" ry="4" fill="#2496d8" opacity="0.5"/>
+              </g>
+              <!-- Scan line -->
+              <rect width="400" height="2" y="0" fill="#2496d8" opacity="0.12">
+                <animateTransform attributeName="transform" type="translate" from="0,0" to="0,320" dur="4s" repeatCount="indefinite"/>
+              </rect>
+              <!-- Corner brackets -->
+              <g stroke="#2496d8" stroke-width="1.5" fill="none" opacity="0.6">
+                <path d="M8,8 L8,24 M8,8 L24,8"/>
+                <path d="M392,8 L376,8 M392,8 L392,24"/>
+                <path d="M8,312 L8,296 M8,312 L24,312"/>
+                <path d="M392,312 L376,312 M392,312 L392,296"/>
+              </g>
+            </svg>
+            <div class="div-number">02</div>
+          </div>
+          <div class="division-content">
+            <h3>Air Force Division</h3>
+            <div class="division-subtitle">Letecká divize</div>
+            <p>Zajišťuje vrtulníkovou i letadlovou podporu. Provádí letecký průzkum, letecké údery, CAS (close air support), transport vojsk a MEDEVAC. Jejich oči jsou vždy nad celým bojištěm.</p>
+            <div class="division-tags">
+              <span class="dtag">Letecký průzkum</span>
+              <span class="dtag">CAS</span>
+              <span class="dtag">MEDEVAC</span>
+              <span class="dtag">Transport vojsk</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Rangers -->
+        <div class="division-slide">
+          <div class="division-visual">
+            <div class="div-tag">DIV-03</div>
+            <svg class="div-img" viewBox="0 0 400 320" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+              <rect width="400" height="320" fill="#0a0608"/>
+              <!-- Dark red atmosphere -->
+              <defs>
+                <radialGradient id="redGlow" cx="50%" cy="30%" r="70%">
+                  <stop offset="0%" stop-color="#2a0808" stop-opacity="1"/>
+                  <stop offset="100%" stop-color="#080408" stop-opacity="1"/>
+                </radialGradient>
+              </defs>
+              <rect width="400" height="320" fill="url(#redGlow)"/>
+              <!-- Cliff/wall -->
+              <polygon points="0,0 80,0 90,320 0,320" fill="#0f0a08" opacity="0.8"/>
+              <polygon points="320,0 400,0 400,320 310,320" fill="#0f0a08" opacity="0.6"/>
+              <!-- Grid -->
+              <pattern id="grid3" width="30" height="30" patternUnits="userSpaceOnUse">
+                <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#8b1a1a" stroke-width="0.3" opacity="0.3"/>
+              </pattern>
+              <rect width="400" height="320" fill="url(#grid3)"/>
+              <!-- Rappel rope -->
+              <line x1="185" y1="0" x2="195" y2="320" stroke="#4a3a28" stroke-width="3" stroke-dasharray="8,3"/>
+              <line x1="210" y1="0" x2="220" y2="320" stroke="#4a3a28" stroke-width="3" stroke-dasharray="8,3"/>
+              <!-- Ranger rappelling down (action pose) -->
+              <g transform="translate(130,60)">
+                <!-- Helmet with NVG -->
+                <ellipse cx="60" cy="20" rx="24" ry="16" fill="#1a2010"/>
+                <rect x="38" y="28" width="44" height="7" rx="2" fill="#111808"/>
+                <!-- NVG mount -->
+                <rect x="48" y="10" width="24" height="8" rx="2" fill="#0d1508"/>
+                <rect x="44" y="14" width="10" height="6" rx="2" fill="#1a3a1a"/>
+                <rect x="66" y="14" width="10" height="6" rx="2" fill="#1a3a1a"/>
+                <!-- Head -->
+                <ellipse cx="60" cy="36" rx="14" ry="15" fill="#7a5535"/>
+                <!-- Balaclava/mask covering lower face -->
+                <rect x="46" y="40" width="28" height="12" rx="3" fill="#1a1a14"/>
+                <!-- Eyes visible, intense -->
+                <rect x="50" y="33" width="8" height="5" rx="2" fill="#0a1a0a"/>
+                <rect x="62" y="33" width="8" height="5" rx="2" fill="#0a1a0a"/>
+                <circle cx="54" cy="35" r="2" fill="#1a3a1a"/>
+                <circle cx="66" cy="35" r="2" fill="#1a3a1a"/>
+                <!-- Neck -->
+                <rect x="52" y="50" width="16" height="8" fill="#7a5535"/>
+                <!-- Body/plate carrier -->
+                <rect x="28" y="57" width="64" height="65" rx="5" fill="#1e2a12"/>
+                <!-- Chest plate -->
+                <rect x="34" y="62" width="52" height="48" rx="3" fill="#172010"/>
+                <!-- Molle webbing detail -->
+                <rect x="37" y="65" width="14" height="4" rx="1" fill="#0f1808" opacity="0.7"/>
+                <rect x="54" y="65" width="14" height="4" rx="1" fill="#0f1808" opacity="0.7"/>
+                <rect x="37" y="72" width="14" height="4" rx="1" fill="#0f1808" opacity="0.7"/>
+                <rect x="54" y="72" width="14" height="4" rx="1" fill="#0f1808" opacity="0.7"/>
+                <!-- Radio on shoulder -->
+                <rect x="22" y="60" width="10" height="16" rx="2" fill="#1a2a10"/>
+                <rect x="24" y="57" width="3" height="8" rx="1" fill="#2a3a18"/>
+                <!-- Left arm (extended holding rope) -->
+                <rect x="-5" y="62" width="35" height="12" rx="5" fill="#1e2a12" transform="rotate(-30, 15, 68)"/>
+                <rect x="-10" y="90" width="16" height="14" rx="3" fill="#172010"/>
+                <!-- Gloved hand on rope -->
+                <ellipse cx="-2" cy="97" rx="8" ry="6" fill="#0a0f08"/>
+                <!-- Right arm (bent, weapon ready) -->
+                <rect x="88" y="62" width="12" height="38" rx="5" fill="#1e2a12"/>
+                <!-- MP5/weapon -->
+                <rect x="94" y="45" width="6" height="55" rx="2" fill="#111"/>
+                <rect x="90" y="68" width="16" height="7" rx="1" fill="#1a1a1a"/>
+                <rect x="96" y="40" width="3" height="12" rx="1" fill="#0a0a0a"/>
+                <!-- Suppressor -->
+                <rect x="95" y="30" width="4" height="14" rx="1" fill="#222"/>
+                <!-- Harness/rappel gear -->
+                <path d="M 44 57 Q 30 90 40 120" stroke="#4a3a18" stroke-width="4" fill="none"/>
+                <path d="M 76 57 Q 90 90 80 120" stroke="#4a3a18" stroke-width="4" fill="none"/>
+                <rect x="38" y="118" width="44" height="10" rx="3" fill="#3a2a10"/>
+                <!-- Legs (spread, action rappel pose) -->
+                <rect x="32" y="120" width="18" height="55" rx="5" fill="#1a2812" transform="rotate(-15, 41, 150)"/>
+                <rect x="68" y="120" width="18" height="55" rx="5" fill="#1a2812" transform="rotate(15, 77, 150)"/>
+                <!-- Boots -->
+                <rect x="20" y="168" width="22" height="12" rx="3" fill="#0f0f08"/>
+                <rect x="68" y="168" width="22" height="12" rx="3" fill="#0f0f08"/>
+              </g>
+              <!-- Muzzle flash hint -->
+              <ellipse cx="224" cy="145" rx="8" ry="5" fill="#ff6600" opacity="0.3"/>
+              <!-- Scan line -->
+              <rect width="400" height="2" y="0" fill="#8b1a1a" opacity="0.2">
+                <animateTransform attributeName="transform" type="translate" from="0,0" to="0,320" dur="3.5s" repeatCount="indefinite"/>
+              </rect>
+              <!-- Corner brackets red -->
+              <g stroke="#8b1a1a" stroke-width="1.5" fill="none" opacity="0.7">
+                <path d="M8,8 L8,24 M8,8 L24,8"/>
+                <path d="M392,8 L376,8 M392,8 L392,24"/>
+                <path d="M8,312 L8,296 M8,312 L24,312"/>
+                <path d="M392,312 L376,312 M392,312 L392,296"/>
+              </g>
+            </svg>
+            <div class="div-number">03</div>
+          </div>
+          <div class="division-content">
+            <h3>Ranger Division</h3>
+            <div class="division-subtitle">75th Rangers — Elitní úderná jednotka</div>
+            <p>Rychlá úderná jednotka armády. Provádí výsadky, rychlé zásahy, likvidaci vysoce nebezpečných cílů a speciální akce vysoké intenzity. Rangers jsou elitní síla mezi běžnou pěchotou a speciály.</p>
+            <div class="division-tags">
+              <span class="dtag">Výsadky</span>
+              <span class="dtag">HVT likvidace</span>
+              <span class="dtag">Speciální akce</span>
+              <span class="dtag">High Intensity</span>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /track -->
+    </div><!-- /slider -->
+
+    <div class="slider-controls">
+      <button class="slider-btn" id="divPrev">←</button>
+      <div class="slider-dots">
+        <div class="dot active" data-i="0"></div>
+        <div class="dot" data-i="1"></div>
+        <div class="dot" data-i="2"></div>
+      </div>
+      <button class="slider-btn" id="divNext">→</button>
+    </div>
+  </div>
+</section>
+
+<!-- TEAM -->
+<section id="team">
+  <div class="container">
+    <p class="section-label">// Velení</p>
+    <h2>Tým</h2>
+    <div class="team-grid">
+      <div class="member-card">
+        <div class="avatar">TP</div>
+        <div class="member-name">Tomáš Procházka</div>
+        <div class="member-rank">⭐ Commander</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- JOIN -->
+<section id="join">
+  <div class="container">
+    <div class="join-box">
+      <p class="section-label">// Nábor</p>
+      <h2>Vstoupit do SAND</h2>
+      <p>Máš zájem stát se součástí bezpečnostní divize SAND? Vyplň přihlášku a náš tým tě kontaktuje. Hledáme disciplinované jedince s respektem k protokolu a smyslem pro bezpečnost.</p>
+      <a href="https://forms.gle/PpNvvS3abuSv2ttx6" target="_blank" class="btn">Odeslat přihlášku</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">SAND</div>
+  <p>San Andreas Naval Defence &nbsp;·&nbsp; Cayo Perico Security Division</p>
+  <p style="margin-top:0.5rem;">Commander: Tomáš Procházka</p>
+</footer>
+
+<script>
+  const track = document.getElementById('divTrack');
+  const dots = document.querySelectorAll('.dot');
+  let current = 0;
+  const total = 3;
+
+  function goTo(i) {
+    current = (i + total) % total;
+    track.style.transform = `translateX(-${current * 100}%)`;
+    dots.forEach((d, idx) => d.classList.toggle('active', idx === current));
+  }
+
+  document.getElementById('divPrev').addEventListener('click', () => goTo(current - 1));
+  document.getElementById('divNext').addEventListener('click', () => goTo(current + 1));
+  dots.forEach(d => d.addEventListener('click', () => goTo(+d.dataset.i)));
+
+  // Auto-advance
+  setInterval(() => goTo(current + 1), 5000);
+</script>
+</body>
+</html>
